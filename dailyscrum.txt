@@ -1,0 +1,13 @@
+Daily SCRUM - every day at 9am
+
+
+Each member writes down answers to 3 questions:
+1.What I have done / not done since last Scrum?
+create the database structure and diagram
+wrote the proposal
+
+2.What I plan to do from this scrum to next (next 24 hours)
+I will finish all the entities classes in java
+
+3. Where do I need assistance? What do I need to figure out.
+I need to figure out the composite object as a memeber in another class
