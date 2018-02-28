@@ -11,3 +11,14 @@ I will finish all the entities classes in java
 
 3. Where do I need assistance? What do I need to figure out.
 I need to figure out the composite object as a memeber in another class
+
+
+2018/02/28 Jian
+1. Done since last srum
+- did GUI draft
+- figure out how to use Jtable
+2. Plan until next Scrum
+- finalize GUI
+- create CRUD
+3. Need assistance / figure things out
+- figure out pdf library
