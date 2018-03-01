@@ -25,6 +25,7 @@ public class SalesOrder {
     private OrderStatus status;
     private List<OrderItem> items;
     private Invoice invoice;
+    private Customer customer;
     
     
     
@@ -183,11 +184,13 @@ public class SalesOrder {
     public void setInvoice(Invoice invoice) {
         this.invoice = invoice;
     }
-   
-    
-    
-    
-    
-    
+
+    public Customer getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
+    }    
     
 }

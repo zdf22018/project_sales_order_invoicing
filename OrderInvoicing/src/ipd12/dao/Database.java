@@ -10,9 +10,11 @@ import ipd12.entity.SalesOrder;
 import ipd12.entity.TaxCode;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -90,15 +92,23 @@ public class Database {
             sbSql.insert(0, "select distinct top 10 ");
         }
         sbSql.append("order by inv.timestamp desc");
-        System.out.println(sbSql.toString());
+        //System.out.println(sbSql.toString());
         try(
                 Statement st = conn.createStatement();
                 ResultSet rt = st.executeQuery(sbSql.toString());
             ){
             while(rt.next()){
-                List<SalesOrder> saleOrders = getOrders("", rt.getInt(1),"",0);
-                //Invoice invoice = new Invoice(rt.getInt(1),rt.getDate(2),rt.getBigDecimal(3), rt.getBigDecimal(4), rt.getBigDecimal(5), rt.getBigDecimal(6), saleOrders);
-                Invoice invoice = new Invoice(rt.getInt(1),rt.getDate(2), (saleOrders.size() > 0 ? saleOrders.get(0) : null));
+                List<SalesOrder> saleOrders = getOrders(rt.getInt(1));
+                Customer customer = new Customer();
+                for(SalesOrder order : saleOrders){
+                    customer = getCustomerById(order.getCustomerId());
+                    break;
+                }
+                
+                Invoice invoice = new Invoice(rt.getInt(1),rt.getDate(2), saleOrders, customer);
+                invoice.setAmountBeforeTax(rt.getBigDecimal(3));
+                invoice.setAmountTax(rt.getBigDecimal(4));
+                invoice.setTotalAmount(rt.getBigDecimal(5));
                 invoices.add(invoice);
             }
         }
@@ -106,9 +116,74 @@ public class Database {
         return invoices;
     }
     
-     public List<SalesOrder> getOrders() throws SQLException{
+    public void addInvoice(Invoice invoice) throws SQLException{
+        
+        if(null == invoice){
+            return;
+        }
+               
+        try{
+            conn.setAutoCommit(false);
+            String insertSql = "insert into invoices(timestamp, amountBeforeTax, amountTax, totalAmount) values(?, ?, ?, ?);SELECT SCOPE_IDENTITY();";
+            Timestamp timestampDate = new java.sql.Timestamp(invoice.getTimestamp().getTime());
+            conn.setAutoCommit(false);
+            int invoiceId = 0;
+            try(PreparedStatement insertStmt = conn.prepareStatement(insertSql);){                
+                insertStmt.setTimestamp(1, timestampDate);
+                insertStmt.setBigDecimal(2, invoice.getAmountBeforeTax());
+                insertStmt.setBigDecimal(3, invoice.getAmountTax());
+                insertStmt.setBigDecimal(4, invoice.getTotalAmount());               
+                
+                insertStmt.executeUpdate(); 
+                ResultSet rs = insertStmt.getGeneratedKeys();
+                if(null != rs && rs.next()){
+                    invoiceId = rs.getInt(1);
+                    System.out.println("Generated invoice Id: " + invoiceId);
+                }
+            }
+            
+            String updateSql = "update orders set invoiceId=?, status=? where id=?";
+            try(PreparedStatement updateStmt = conn.prepareStatement(updateSql);){
+                for(SalesOrder order : invoice.getSalesOrder()){
+                    updateStmt.setInt(1, invoiceId);
+                    updateStmt.setString(2, order.getStatus().name());
+                    updateStmt.setInt(3, order.getId());
+
+                    updateStmt.executeUpdate();
+                }
+            }
+            
+            conn.commit();
+        }catch(SQLException e){
+            conn.rollback();
+            throw new SQLException(e.getMessage());
+        }
+       
+    }
+    
+    public List<SalesOrder> getOrders() throws SQLException{
         return getOrders("", 0, "", 0);
-     }
+    }
+    
+     public List<SalesOrder> getOrdersByCustomerName(String customerName) throws SQLException{
+        return getOrders(customerName, 0, "", 0);
+    }
+     
+    public List<SalesOrder> getOrders(String customerName, String status) throws SQLException{
+        return getOrders(customerName, 0, status, 0);
+    }
+    
+    public List<SalesOrder> getOrders(int invoiceId) throws SQLException{
+        return getOrders("", invoiceId, "", 0);
+    }
+    
+    public List<SalesOrder> getOrders(String status) throws SQLException{
+        return getOrders("", 0, status, 0);
+    }
+    
+    public List<SalesOrder> getOrders(String customerName, String status, int orderId) throws SQLException{
+        return getOrders(customerName, 0, status, orderId);
+    }
     
     public List<SalesOrder> getOrders(String customerName, int invoiceId, String status, int orderId) throws SQLException{
         List<SalesOrder> orders = new ArrayList<>();
@@ -117,9 +192,9 @@ public class Database {
         sbSql.append("id, customerId, timestamp, amountBeforeTax, amountTax, totalAmount, status, invoiceId ");
         sbSql.append("from orders ");
        
-         if(!customerName.isEmpty() || 0 != invoiceId || !status.isEmpty() || 0!= orderId){
+        if(!customerName.isEmpty() || 0 != invoiceId || !status.isEmpty() || 0 != orderId){
             if(!customerName.isEmpty()){
-                sbWhere.append("customerId in(select id from customer where name like '%");
+                sbWhere.append("customerId in(select id from customers where name like '%");
                 sbWhere.append(customerName);
                 sbWhere.append("%') ");
             }
@@ -140,15 +215,13 @@ public class Database {
                 sbWhere.append(status);
                 sbWhere.append("' ");
             }
-            
-            if(0 != orderId){
+             if(0 != orderId){
                 if(sbWhere.length() > 0){
                     sbWhere.append(" and ");
                 }
                 sbWhere.append(" id =");
                 sbWhere.append(orderId);
             }
-            
         }
         if(sbWhere.length() > 0){
             sbSql.insert(0, "select ");
@@ -159,7 +232,7 @@ public class Database {
             sbSql.insert(0, "select top 10 ");
         }
         sbSql.append("order by timestamp desc");
-        System.out.println(sbSql.toString());
+        //System.out.println(sbSql.toString());
         try(
                 Statement st = conn.createStatement();
                 ResultSet rt = st.executeQuery(sbSql.toString());
@@ -167,6 +240,8 @@ public class Database {
             while(rt.next()){
                 List <OrderItem> items = getOrderItemsByOrderId(rt.getInt(1));
                 SalesOrder order = new SalesOrder(rt.getInt(1),rt.getInt(2),rt.getDate(3),rt.getBigDecimal(4), rt.getBigDecimal(5), rt.getBigDecimal(6),OrderStatus.valueOf(rt.getString(7)), items);
+                Customer customer = getCustomerById(rt.getInt(2));
+                order.setCustomer(customer);
                 orders.add(order);
             }
         }
@@ -175,14 +250,14 @@ public class Database {
     }
     
     public SalesOrder getOrderById(int id) throws SQLException{
-        SalesOrder order = null;
+        SalesOrder order = new SalesOrder();
         StringBuilder sbSql = new StringBuilder();
         sbSql.append("select id, customerId, timestamp, amountBeforeTax, amountTax, totalAmount, status, invoiceId ");
         sbSql.append("from orders ");
         sbSql.append("where id = ");
         sbSql.append(id);      
       
-        System.out.println(sbSql.toString());
+        //System.out.println(sbSql.toString());
         
         try(
                 Statement st = conn.createStatement();
@@ -200,17 +275,18 @@ public class Database {
     public List<OrderItem> getOrderItemsByOrderId(int orderId) throws SQLException{
         List<OrderItem> items = new ArrayList<>();
         StringBuilder sbSql = new StringBuilder();
-        sbSql.append("select id, orderId, productId, quantity, lineTotal ");
+        sbSql.append("select id, orderId, productId, quantity, ItemTotal ");
         sbSql.append("from orderItems where orderId=");
         sbSql.append(orderId);       
         
-        System.out.println(sbSql.toString());
+        //System.out.println(sbSql.toString());
         try(
                 Statement st = conn.createStatement();
                 ResultSet rt = st.executeQuery(sbSql.toString());
             ){
             while(rt.next()){
-                OrderItem item = new OrderItem(rt.getInt(1),rt.getInt(2),rt.getInt(3),rt.getBigDecimal(4), rt.getBigDecimal(5));
+                Product product = getProductById(rt.getInt(3));
+                OrderItem item = new OrderItem(rt.getInt(1),rt.getInt(2),rt.getInt(3),rt.getBigDecimal(4), rt.getBigDecimal(5), product);
                 items.add(item);
             }
         }
@@ -219,14 +295,14 @@ public class Database {
     }
     
     public Product getProductById(int id) throws SQLException{
-        Product product = null;
+        Product product = new Product();
         StringBuilder sbSql = new StringBuilder();
-        sbSql.append("select id, description, unitPrice");
-        sbSql.append("from product ");
+        sbSql.append("select id, description, unitPrice ");
+        sbSql.append("from products ");
         sbSql.append("where id = ");
         sbSql.append(id);      
       
-        System.out.println(sbSql.toString());
+        //System.out.println(sbSql.toString());
         
         try(
                 Statement st = conn.createStatement();
@@ -244,21 +320,26 @@ public class Database {
     }
     
     public Customer getCustomerById(int id) throws SQLException{
-        Customer customer = null;
+        Customer customer = new Customer();
         StringBuilder sbSql = new StringBuilder();
         sbSql.append("select id, name, address, taxCode, creditLimit, email ");
         sbSql.append("from customers ");
         sbSql.append("where id = ");
         sbSql.append(id);      
       
-        System.out.println(sbSql.toString());
+        //System.out.println(sbSql.toString());
         
         try(
                 Statement st = conn.createStatement();
                 ResultSet rt = st.executeQuery(sbSql.toString());
             ){
             if(rt.next()){                
-                customer = new Customer(rt.getInt(1), rt.getString(2), rt.getString(3), TaxCode.valueOf(rt.getString(4)), rt.getBigDecimal(5), rt.getString(6));
+                //customer = new Customer(rt.getInt(1), rt.getString(2), rt.getString(3), TaxCode.valueOf(rt.getString(4)), rt.getBigDecimal(5), rt.getString(6));
+                customer.setId(rt.getInt(1));
+                customer.setName(rt.getString(2));
+                customer.setAddress(rt.getString(3));
+                customer.setCreditLimit(rt.getBigDecimal(5));
+                customer.setEmail(rt.getString(6));
             }
             else{
                 throw new SQLException("Not found product id=" + id);
