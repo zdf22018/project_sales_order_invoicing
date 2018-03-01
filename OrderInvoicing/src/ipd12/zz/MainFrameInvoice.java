@@ -5,7 +5,14 @@
  */
 package ipd12.zz;
 
+import ipd12.dao.Database;
+import ipd12.entity.Invoice;
 import java.awt.Component;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -23,24 +30,42 @@ public class MainFrameInvoice extends javax.swing.JFrame {
     DefaultTableModel dlgOrdersModel = new DefaultTableModel();
     DefaultTableModel dlgOrdersItemsModel = new DefaultTableModel();
     
+    private Database db;
+    
     /**
      * Creates new form MainFrameInvoice
      */
     public MainFrameInvoice() {
-        initComponents();
-        jtInvoices.getSelectionModel().addListSelectionListener(new ListSelectionListener() {  
-   
-            public void valueChanged(ListSelectionEvent e) {  
-                //I want something to happen before the row change is triggered on the UI.  
-               //JOptionPane.showMessageDialog(testTable, "Row changed!");  
-               loadInvoiceOrderlines();
-               System.out.println(jtInvoices.getSelectedRow());
-            }  
-        }); 
-        loadTableTitle();
-        loadInvoices();
-        loadInvoiceOrderlines();
-        //jtInvoices.
+       
+        try {
+            db = new Database();
+            
+            initComponents();
+            jtInvoices.getSelectionModel().addListSelectionListener(new ListSelectionListener() {  
+
+                public void valueChanged(ListSelectionEvent e) {  
+                    //I want something to happen before the row change is triggered on the UI.
+                   loadInvoiceOrderlines();
+                   System.out.println(jtInvoices.getSelectedRow());
+                }  
+            }); 
+            
+            jtOrderitems.getSelectionModel().addListSelectionListener(new ListSelectionListener() {  
+
+                public void valueChanged(ListSelectionEvent e) {  
+                   System.out.println(jtOrderitems.getSelectedRow());
+                   System.out.println(jtOrderitems.getModel().getValueAt(jtOrderitems.getSelectedRow(), 0));
+                }  
+            }); 
+            
+            loadTableTitle();
+            loadInvoices();
+            loadInvoiceOrderlines();
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Fatal error: can not connect to database.", "database error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+            System.exit(1);
+        }
     }
     
     private void loadTableTitle(){
@@ -80,22 +105,16 @@ public class MainFrameInvoice extends javax.swing.JFrame {
     
     private void loadInvoices(){
        
-        modelInvoices.setRowCount(0);
-        
-        Object[][] data = {
-            {new Integer(1),new Integer(78), "Smith",
-             "Snowboarding", new Integer(5),new Integer(5),new Integer(5),"2018-2-3"},
-            {new Integer(3),new Integer(78), "Doe",
-             "Rowing", new Integer(3),new Integer(5),new Integer(5),"2018-2-3"},
-            {new Integer(4),new Integer(78), "Black",
-             "Knitting", new Integer(2),new Integer(5),new Integer(5),"2018-2-3"},
-            {new Integer(5),new Integer(12),"Jane",
-             "Speed reading", new Integer(20),new Integer(5),new Integer(5),"2018-2-3"},
-            {new Integer(7),new Integer(12), "Brown",
-             "Pool", new Integer(10),new Integer(5),new Integer(5),"2018-2-3"}
-        };
-        for(Object da[] : data){
-            modelInvoices.addRow(da);
+        try {
+            modelInvoices.setRowCount(0);            
+//            txtDateFrom.getText()
+//            txtDateTo.getText()
+            List<Invoice> invoices = db.getInvoices(txtCustomerName.getText(), null, null);
+            for(Invoice invoice : invoices){
+                modelInvoices.addRow(new Object[]{invoice.getId(),invoice.getTimestamp()});
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(MainFrameInvoice.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -106,7 +125,7 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         int invoicesSelected = jtInvoices.getSelectedRows().length;
         if(0 == invoicesSelected || invoicesSelected > 1){
             System.out.println("0 row selected.");
-            return;
+            //return;
         }
         
         Object[][] data = {
@@ -364,6 +383,11 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         jLabel4.setText("to");
 
         btnSearch.setText("Search");
+        btnSearch.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSearchActionPerformed(evt);
+            }
+        });
 
         jLabel5.setText("Invoices");
 
@@ -376,11 +400,6 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         jtInvoices.setRowMargin(2);
         jtInvoices.setSelectionBackground(new java.awt.Color(102, 102, 102));
         jtInvoices.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-        jtInvoices.addVetoableChangeListener(new java.beans.VetoableChangeListener() {
-            public void vetoableChange(java.beans.PropertyChangeEvent evt)throws java.beans.PropertyVetoException {
-                jtInvoicesVetoableChange(evt);
-            }
-        });
         jScrollPane8.setViewportView(jtInvoices);
 
         jtOrderitems.setModel(modelInvoiceOrderlines);
@@ -484,11 +503,6 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jtInvoicesVetoableChange(java.beans.PropertyChangeEvent evt)throws java.beans.PropertyVetoException {//GEN-FIRST:event_jtInvoicesVetoableChange
-        
-        System.out.println("invoices");
-    }//GEN-LAST:event_jtInvoicesVetoableChange
-
     private void dlgIssue_btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dlgIssue_btnCancelActionPerformed
         
         dlgIssue.setVisible(false);
@@ -526,6 +540,12 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         dlgIssue.setLocationRelativeTo(SwingUtilities.getWindowAncestor((Component) evt.getSource()));
         dlgIssue.setVisible(true);
     }//GEN-LAST:event_menuIssueMouseClicked
+
+    private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
+        
+        loadInvoices();
+        loadInvoiceOrderlines();
+    }//GEN-LAST:event_btnSearchActionPerformed
 
     /**
      * @param args the command line arguments
