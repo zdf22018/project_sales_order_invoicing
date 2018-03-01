@@ -6,6 +6,7 @@
 package ipd12.entity;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 
 /**
@@ -14,20 +15,24 @@ import java.util.Date;
  */
 public class SalesOrder {
     
-     private int id;
+    private int id;
     private int customerId;
     private Date timestamp;
     private BigDecimal amountBeforeTax;
     private BigDecimal amountTax;
     private BigDecimal totalAmount;
     private Status status;
+    ArrayList <OrderItem> items;
+    
     
     enum Status{
         complete, notcomplete
     }
     
     
-    SalesOrder(int id, int customerId, Date timestamp, BigDecimal amountBeforeTax, BigDecimal amountTax, BigDecimal totalAmount, Status status){
+    SalesOrder(int id, int customerId, Date timestamp, BigDecimal amountBeforeTax, 
+            BigDecimal amountTax, BigDecimal totalAmount, Status status,
+            ArrayList items){
             setId(id);
             setCustomerId(customerId);
             setTimestamp(timestamp);
@@ -35,10 +40,11 @@ public class SalesOrder {
             setAmountTax(amountTax);
             setTotalAmount(totalAmount);
             setStatus(status);
-    
+            items= new ArrayList<OrderItem>();
     }
     
-    SalesOrder(int customerId,BigDecimal amountBeforeTax, BigDecimal amountTax, BigDecimal totalAmount, Status status){
+    SalesOrder(int customerId,BigDecimal amountBeforeTax, BigDecimal amountTax, 
+            BigDecimal totalAmount, Status status, ArrayList items){
             setId(id);
             setCustomerId(customerId);
             setTimestamp(timestamp);
@@ -46,7 +52,7 @@ public class SalesOrder {
             setAmountTax(amountTax);
             setTotalAmount(totalAmount);
             setStatus(status);
-    
+            items= new ArrayList<OrderItem>();
     }
 
     /**

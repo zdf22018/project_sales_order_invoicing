@@ -13,18 +13,41 @@ import java.util.Date;
  * @author 1095871
  */
 public class Invoice {
+
+    /**
+     * @return the salesOrder
+     */
+    
    private int id;
    private Date timestamp;
-   private BigDecimal amountBeforeTax;
-    private BigDecimal amountTax;
-    private BigDecimal totalAmount;
+    //private BigDecimal amountBeforeTax;
+   // private BigDecimal amountTax;
+    //private BigDecimal totalAmount;
     private BigDecimal payment;
+    private SalesOrder salesOrder;
    
  
    
     
-    Invoice(int id, Date timestamp, BigDecimal amountBeforeTax){
+    Invoice(int id, Date timestamp, SalesOrder salesOrder){
+            setId(id);
+            setTimestamp(timestamp);
+            setSalesOrder(salesOrder);
     
+    }
+    
+    Invoice(Date timestamp, SalesOrder salesOrder){
+           
+            setTimestamp(timestamp);
+            setSalesOrder(salesOrder);
+    
+    }
+
+    Invoice(Date timestamp, SalesOrder salesOrder, BigDecimal payment){
+           
+            setTimestamp(timestamp);
+            setSalesOrder(salesOrder);
+            setPayment(payment);
     
     }
 
@@ -56,48 +79,20 @@ public class Invoice {
         this.timestamp = timestamp;
     }
 
+    public SalesOrder getSalesOrder() {
+        return salesOrder;
+    }
+
+    /**
+     * @param salesOrder the salesOrder to set
+     */
+    public void setSalesOrder(SalesOrder salesOrder) {
+        this.salesOrder = salesOrder;
+    }
     /**
      * @return the amountBeforeTax
      */
-    public BigDecimal getAmountBeforeTax() {
-        return amountBeforeTax;
-    }
-
-    /**
-     * @param amountBeforeTax the amountBeforeTax to set
-     */
-    public void setAmountBeforeTax(BigDecimal amountBeforeTax) {
-        this.amountBeforeTax = amountBeforeTax;
-    }
-
-    /**
-     * @return the amountTax
-     */
-    public BigDecimal getAmountTax() {
-        return amountTax;
-    }
-
-    /**
-     * @param amountTax the amountTax to set
-     */
-    public void setAmountTax(BigDecimal amountTax) {
-        this.amountTax = amountTax;
-    }
-
-    /**
-     * @return the totalAmount
-     */
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
-    }
-
-    /**
-     * @param totalAmount the totalAmount to set
-     */
-    public void setTotalAmount(BigDecimal totalAmount) {
-        this.totalAmount = totalAmount;
-    }
-
+    
     /**
      * @return the payment
      */
