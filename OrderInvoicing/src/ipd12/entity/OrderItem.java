@@ -19,8 +19,11 @@ public class OrderItem {
     private BigDecimal itemTotal;
 
     
+    public OrderItem(){
     
-    OrderItem(int id, int orderId, int productId, BigDecimal quantity, BigDecimal itemTotal){
+    }
+    
+   public OrderItem(int id, int orderId, int productId, BigDecimal quantity, BigDecimal itemTotal){
             setId(id);
             setOrderId(orderId);
             setProductId(productId);

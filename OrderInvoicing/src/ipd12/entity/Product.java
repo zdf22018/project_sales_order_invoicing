@@ -16,8 +16,10 @@ public class Product {
     private String description;
     private BigDecimal unitPrice;
 
+    public Product(){
+        }
     
-    Product(int id, String description, BigDecimal unitPrice){
+    public Product(int id, String description, BigDecimal unitPrice){
         setId(id);
         setDescription(description);
         setUnitPrice(unitPrice);

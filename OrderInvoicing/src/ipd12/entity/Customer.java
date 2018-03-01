@@ -30,16 +30,16 @@ public class Customer {
     private int id;
     private String name;
     private String address;
-    private Taxcode taxCode;
+    private TaxCode taxCode;
     private BigDecimal creditLimit;
     private String email;
     
     
-    enum Taxcode{
-    gst, qst, gstqst, nosalestax
+    public Customer(){
+    
     }
     
-    Customer(int id, String name, String address, Taxcode taxCode, BigDecimal creditLimit, String email){
+    public Customer(int id, String name, String address, TaxCode taxCode, BigDecimal creditLimit, String email){
             setId(id);
             setName(name);
             setAddress(address);
@@ -49,7 +49,7 @@ public class Customer {
             
     }
     
-    Customer(String name, String address, Taxcode taxCode, BigDecimal creditLimit, String email){
+    public Customer(String name, String address, TaxCode taxCode, BigDecimal creditLimit, String email){
             
             setName(name);
             setAddress(address);
@@ -59,7 +59,7 @@ public class Customer {
             
     }
     
-    Customer(String name, String address, Taxcode taxCode){
+    Customer(String name, String address, TaxCode taxCode){
             
             setName(name);
             setAddress(address);
@@ -113,14 +113,14 @@ public class Customer {
     /**
      * @return the taxCode
      */
-    public Taxcode getTaxCode() {
+    public TaxCode getTaxCode() {
         return taxCode;
     }
 
     /**
      * @param taxCode the taxCode to set
      */
-    public void setTaxCode(Taxcode taxCode) {
+    public void setTaxCode(TaxCode taxCode) {
         this.taxCode = taxCode;
     }
 
