@@ -24,15 +24,10 @@ import jdk.net.SocketFlow;
  * @author Jian Zhao
  */
 public class Database {
-//    private final String dbURL = "//azuredf.database.windows.net";
-//    private final String databaseName = "project";
-//    private final String username = "zdf2018";
-//    private final String password = "zoe20178@";
-    
-    private final String dbURL = "//zhaojiandb.database.windows.net";
-    private final String databaseName = "dbtest";
-    private final String username = "jeanzhao";
-    private final String password = "Jean170905";
+    private final String dbURL = "//azuredf.database.windows.net";
+    private final String databaseName = "project";
+    private final String username = "zdf2018";
+    private final String password = "zoe20178@";
     
     private Connection conn;
     

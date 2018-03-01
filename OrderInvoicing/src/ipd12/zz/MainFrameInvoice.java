@@ -7,6 +7,8 @@ package ipd12.zz;
 
 import ipd12.dao.Database;
 import ipd12.entity.Invoice;
+import ipd12.entity.OrderItem;
+import ipd12.entity.SalesOrder;
 import java.awt.Component;
 import java.sql.SQLException;
 import java.util.List;
@@ -114,28 +116,41 @@ public class MainFrameInvoice extends javax.swing.JFrame {
                 modelInvoices.addRow(new Object[]{invoice.getId(),invoice.getTimestamp()});
             }
         } catch (SQLException ex) {
-            Logger.getLogger(MainFrameInvoice.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, "Error: unable to reload invoice(s)\n" + ex.getMessage(), "database error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
         }
     }
     
     private void loadInvoiceOrderlines(){
 
-        modelInvoiceOrderlines.setRowCount(0);
-        
-        int invoicesSelected = jtInvoices.getSelectedRows().length;
-        if(0 == invoicesSelected || invoicesSelected > 1){
-            System.out.println("0 row selected.");
-            //return;
-        }
-        
-        Object[][] data = {
-            {new Integer(3), "Smith",
-             new Integer(3),new Integer(5),new Integer(5)},
-            {new Integer(3), "Doe",
-             new Integer(3),new Integer(5),new Integer(5)}
-        };
-        for(Object da[] : data){
-            modelInvoiceOrderlines.addRow(da);
+        try {
+            modelInvoiceOrderlines.setRowCount(0);
+            
+            int invoicesSelected = jtInvoices.getSelectedRows().length;
+            if(0 == invoicesSelected || invoicesSelected > 1){
+                System.out.println("0 row selected.");
+                return;
+            }
+            
+            List<SalesOrder> orders = db.getOrders("", Integer.parseInt(jtInvoices.getModel().getValueAt(jtInvoices.getSelectedRow(), 0).toString()), "", 0);
+//            for(int i = 0; i < orders.size(); i++){
+//                List<OrderItem> items = db.getOrderItemsByOrderId(orders.get(0).getId());
+//                for(OrderItem item : orders.get(i).getItems()){
+//                    modelInvoiceOrderlines.addRow(new Object[]{item.getId(),item.getItemTotal()});
+//                }
+//            }
+            Object[][] data = {
+                {new Integer(3), "Smith",
+                    new Integer(3),new Integer(5),new Integer(5)},
+                {new Integer(3), "Doe",
+                    new Integer(3),new Integer(5),new Integer(5)}
+            };
+            for(Object da[] : data){
+                modelInvoiceOrderlines.addRow(da);
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error: unable to reload order item(s)\n" + ex.getMessage(), "database error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
         }
     }
 
