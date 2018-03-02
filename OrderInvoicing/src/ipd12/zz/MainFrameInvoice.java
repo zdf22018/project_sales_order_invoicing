@@ -69,6 +69,22 @@ public class MainFrameInvoice extends javax.swing.JFrame {
                 }  
             }); 
             
+            dlgOrders_jtOrders.getSelectionModel().addListSelectionListener(new ListSelectionListener() {  
+
+                public void valueChanged(ListSelectionEvent e) {  
+                    //I want something to happen before the row change is triggered on the UI.
+                   loadOrderItems();
+                   System.out.println(dlgOrders_jtOrders.getSelectedRow());
+                }  
+            }); 
+            dlgOrders_jtItems.getSelectionModel().addListSelectionListener(new ListSelectionListener() {  
+
+                public void valueChanged(ListSelectionEvent e) {  
+                   System.out.println(dlgOrders_jtItems.getSelectedRow());
+                   System.out.println(dlgOrders_jtItems.getModel().getValueAt(dlgOrders_jtItems.getSelectedRow(), 0));
+                }  
+            }); 
+            
             loadTableTitle();
             loadInvoices();
             loadInvoiceOrderlines();
@@ -263,12 +279,12 @@ public class MainFrameInvoice extends javax.swing.JFrame {
             Object orderId = dlgOrders_jtOrders.getModel().getValueAt(dlgOrders_jtOrders.getSelectedRow(), 0);
             System.out.println(orderId);
             
-          List<SalesOrder> orders = db.getOrders(Integer.parseInt(orderId.toString()));
-           System.out.println (orders);
-           for(int i = 0; i < orders.size(); i++){
+          //List<SalesOrder> orders = db.getOrders(Integer.parseInt(orderId.toString()));
+           //System.out.println (orders);
+           //for(int i = 0; i < orders.size(); i++){
                 List<OrderItem> items = db.getOrderItemsByOrderId(Integer.parseInt(orderId.toString()));
               //  List<OrderItem> items = db.getOrderItemsByOrderId(orders.get(i).getId());
-                System.out.println(orders.get(i).getId());
+                //System.out.println(orders.get(i).getId());
                 System.out.println(items);
                 for(OrderItem item : items){
                    	dlgOrdersItemsModel.addRow(new Object[]{
@@ -278,7 +294,7 @@ public class MainFrameInvoice extends javax.swing.JFrame {
                         item.getQuantity(), item.getItemTotal()
                     });
                 }
-            }
+            //}
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Error: unable to reload order item(s)\n" + ex.getMessage(), "database error", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
@@ -433,6 +449,11 @@ public class MainFrameInvoice extends javax.swing.JFrame {
 
         dlgOrders.setTitle("Query Sales Orders");
         dlgOrders.setModal(true);
+        dlgOrders.addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentShown(java.awt.event.ComponentEvent evt) {
+                dlgOrdersComponentShown(evt);
+            }
+        });
 
         jLabel10.setText("Customer name");
 
@@ -736,23 +757,9 @@ public class MainFrameInvoice extends javax.swing.JFrame {
     }//GEN-LAST:event_miExitActionPerformed
 
     private void menuQueryOrdesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_menuQueryOrdesMouseClicked
-        dlgOrders_jtOrders.getSelectionModel().addListSelectionListener(new ListSelectionListener() {  
-
-                public void valueChanged(ListSelectionEvent e) {  
-                    //I want something to happen before the row change is triggered on the UI.
-                 // loadOrderItems();
-                   System.out.println(dlgOrders_jtOrders.getSelectedRow());
-                }  
-            }); 
-        dlgOrders_jtItems.getSelectionModel().addListSelectionListener(new ListSelectionListener() {  
-
-                public void valueChanged(ListSelectionEvent e) {  
-                   System.out.println(dlgOrders_jtItems.getSelectedRow());
-                   System.out.println(dlgOrders_jtItems.getModel().getValueAt(dlgOrders_jtItems.getSelectedRow(), 0));
-                }  
-            }); 
-        loadOrders();
-        loadOrderItems();
+        
+        //loadOrders();
+        //loadOrderItems();
         dlgOrders.pack();
         dlgOrders.setLocationRelativeTo(SwingUtilities.getWindowAncestor((Component) evt.getSource()));
         dlgOrders.setVisible(true);
@@ -798,6 +805,11 @@ public class MainFrameInvoice extends javax.swing.JFrame {
             ex.printStackTrace();
         }
     }//GEN-LAST:event_miExPDFActionPerformed
+
+    private void dlgOrdersComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_dlgOrdersComponentShown
+        
+        loadOrders();
+    }//GEN-LAST:event_dlgOrdersComponentShown
 
     /**
      * @param args the command line arguments
