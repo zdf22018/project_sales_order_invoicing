@@ -232,9 +232,10 @@
         <Component class="javax.swing.JComboBox" name="dlgOrders_cbStatus">
           <Properties>
             <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-              <StringArray count="2">
-                <StringItem index="0" value="complete"/>
-                <StringItem index="1" value="not complete"/>
+              <StringArray count="3">
+                <StringItem index="0" value="---"/>
+                <StringItem index="1" value="complete"/>
+                <StringItem index="2" value="notcomplete"/>
               </StringArray>
             </Property>
           </Properties>

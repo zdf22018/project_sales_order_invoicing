@@ -240,11 +240,21 @@ public class MainFrameInvoice extends javax.swing.JFrame {
        
         try {
             dlgOrdersModel.setRowCount(0); 
+            String customerName="";
+            String orderStatus="";
+            int orderId=0;
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
             
-            List<SalesOrder> orders = db.getOrders(dlgOrders_txtCustomerName.getText(), 
-				dlgOrders_cbStatus.getSelectedItem().toString(),
-				Integer.parseInt(dlgOrders_txtOrderId.getText()));
+            customerName = dlgOrders_txtCustomerName.getText();
+           
+            if (dlgOrders_cbStatus.getSelectedItem()!=null && !dlgOrders_cbStatus.getSelectedItem().equals("---")){
+            orderStatus = dlgOrders_cbStatus.getSelectedItem().toString();
+            }
+            if (!dlgOrders_txtOrderId.getText().isEmpty()){
+            orderId = Integer.parseInt(dlgOrders_txtOrderId.getText());
+            }
+            
+            List<SalesOrder> orders = db.getOrders(customerName, orderStatus, orderId);
             for(SalesOrder order : orders){
                 dlgOrdersModel.addRow(new Object[]{
                     order.getId(), 
@@ -461,7 +471,7 @@ public class MainFrameInvoice extends javax.swing.JFrame {
 
         jLabel12.setText("Status");
 
-        dlgOrders_cbStatus.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "complete", "not complete" }));
+        dlgOrders_cbStatus.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "---", "complete", "notcomplete" }));
 
         dlgOrders_btnSearch.setText("Search");
         dlgOrders_btnSearch.addActionListener(new java.awt.event.ActionListener() {

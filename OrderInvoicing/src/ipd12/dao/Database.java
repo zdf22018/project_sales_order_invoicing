@@ -260,7 +260,7 @@ public class Database {
             sbSql.insert(0, "select top 10 ");
         }
         sbSql.append("order by timestamp desc");
-        //System.out.println(sbSql.toString());
+        System.out.println(sbSql.toString());
         try(
                 Statement st = conn.createStatement();
                 ResultSet rt = st.executeQuery(sbSql.toString());
