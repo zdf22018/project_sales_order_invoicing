@@ -33,3 +33,14 @@ I need to figure out the composite object as a memeber in another class
 - implement invoice search function
 3. Need assistance / figure things out
 - continue figure out pdf library
+
+
+2018/03/02 Jian
+1. Done/Not done since last srum
+- done: create CRUD / implement invoice search function
+- not done: export pdf
+2. Plan until next Scrum
+- export pdf
+- fix bug
+3. Need assistance / figure things out
+
