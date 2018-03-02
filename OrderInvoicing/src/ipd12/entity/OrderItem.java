@@ -6,6 +6,7 @@
 package ipd12.entity;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  *
@@ -17,17 +18,19 @@ public class OrderItem {
     private int productId;
     private BigDecimal quantity;
     private BigDecimal itemTotal;
-
+    private Product product;
     
+    public OrderItem(){
     
-    OrderItem(int id, int orderId, int productId, BigDecimal quantity, BigDecimal itemTotal){
+    }
+    
+   public OrderItem(int id, int orderId, int productId, BigDecimal quantity, BigDecimal itemTotal, Product product){
             setId(id);
             setOrderId(orderId);
             setProductId(productId);
             setQuantity(quantity);
             setItemTotal(itemTotal);
-            
-    
+            setProduct(product);    
     }
     /**
      * @return the id
@@ -97,9 +100,15 @@ public class OrderItem {
      */
     public void setItemTotal(BigDecimal ItemToal) {
         this.itemTotal = ItemToal;
-    }
-    
+    }    
 
-    
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+
     
 }

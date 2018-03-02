@@ -7,24 +7,59 @@ package ipd12.entity;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 /**
  *
  * @author 1095871
  */
 public class Invoice {
+
+    /**
+     * @return the amountBeforeTax
+     */
+    
    private int id;
-   private Date timestamp;
+   private java.sql.Date timestamp;
    private BigDecimal amountBeforeTax;
     private BigDecimal amountTax;
-    private BigDecimal totalAmount;
+   private BigDecimal totalAmount;
     private BigDecimal payment;
+    private List <SalesOrder> salesOrder;
+    private Customer customer;
    
  
+   public Invoice(){
+   }
+    
    
+   
+    public Invoice(int id, java.sql.Date timestamp, List salesOrder, Customer customer){
+            setId(id);
+            setTimestamp(timestamp);
+            this.salesOrder=salesOrder;
+            this.customer =customer;
     
-    Invoice(int id, Date timestamp, BigDecimal amountBeforeTax){
+    }
+    public Invoice(int id, java.sql.Date timestamp, List salesOrder){
+            setId(id);
+            setTimestamp(timestamp);
+            this.salesOrder=salesOrder;
+            
     
+    }
+    public Invoice(java.sql.Date timestamp, List salesOrder, Customer customer){
+           
+           setTimestamp(timestamp);
+            this.salesOrder=salesOrder;
+            this.customer =customer;
+    }
+
+    public Invoice(java.sql.Date timestamp, List salesOrder, BigDecimal payment){
+           
+            setTimestamp(timestamp);
+            this.salesOrder=salesOrder;
+            setPayment(payment);
     
     }
 
@@ -52,13 +87,38 @@ public class Invoice {
     /**
      * @param timestamp the timestamp to set
      */
-    public void setTimestamp(Date timestamp) {
+    public void setTimestamp(java.sql.Date timestamp) {
         this.timestamp = timestamp;
     }
 
+   
+
+   
+    public BigDecimal getPayment() {
+        return payment;
+    }
+
     /**
-     * @return the amountBeforeTax
+     * @param payment the payment to set
      */
+    public void setPayment(BigDecimal payment) {
+        this.payment = payment;
+    }
+
+    /**
+     * @return the salesOrder
+     */
+    public List <SalesOrder> getSalesOrder() {
+        return salesOrder;
+    }
+
+    /**
+     * @param salesOrder the salesOrder to set
+     */
+    public void setSalesOrder(List <SalesOrder> salesOrder) {
+        this.salesOrder = salesOrder;
+    }
+    
     public BigDecimal getAmountBeforeTax() {
         return amountBeforeTax;
     }
@@ -99,18 +159,22 @@ public class Invoice {
     }
 
     /**
-     * @return the payment
+     * @return the customer
      */
-    public BigDecimal getPayment() {
-        return payment;
+    public Customer getCustomer() {
+        return customer;
     }
 
     /**
-     * @param payment the payment to set
+     * @param customer the customer to set
      */
-    public void setPayment(BigDecimal payment) {
-        this.payment = payment;
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
     }
+
+    /**
+     * @return the salesOrder
+     */
     
     
 }

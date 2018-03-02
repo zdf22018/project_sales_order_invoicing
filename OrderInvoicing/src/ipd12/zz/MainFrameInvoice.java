@@ -5,7 +5,25 @@
  */
 package ipd12.zz;
 
+import ipd12.dao.Database;
+import ipd12.entity.Invoice;
+import ipd12.entity.OrderItem;
+import ipd12.entity.OrderStatus;
+import ipd12.entity.SalesOrder;
 import java.awt.Component;
+import java.awt.event.WindowEvent;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.sql.Date;
+import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -18,29 +36,47 @@ import javax.swing.table.DefaultTableModel;
 public class MainFrameInvoice extends javax.swing.JFrame {
 
     DefaultTableModel modelInvoices = new DefaultTableModel();
-    DefaultTableModel modelInvoiceOrderlines = new DefaultTableModel();
+    DefaultTableModel modelInvoiceOrderItems = new DefaultTableModel();
     DefaultTableModel dlgIssueOrdersModel = new DefaultTableModel();
     DefaultTableModel dlgOrdersModel = new DefaultTableModel();
     DefaultTableModel dlgOrdersItemsModel = new DefaultTableModel();
+    
+    private Database db;
     
     /**
      * Creates new form MainFrameInvoice
      */
     public MainFrameInvoice() {
-        initComponents();
-        jtInvoices.getSelectionModel().addListSelectionListener(new ListSelectionListener() {  
-   
-            public void valueChanged(ListSelectionEvent e) {  
-                //I want something to happen before the row change is triggered on the UI.  
-               //JOptionPane.showMessageDialog(testTable, "Row changed!");  
-               loadInvoiceOrderlines();
-               System.out.println(jtInvoices.getSelectedRow());
-            }  
-        }); 
-        loadTableTitle();
-        loadInvoices();
-        loadInvoiceOrderlines();
-        //jtInvoices.
+       
+        try {
+            db = new Database();
+            
+            initComponents();
+            jtInvoices.getSelectionModel().addListSelectionListener(new ListSelectionListener() {  
+
+                public void valueChanged(ListSelectionEvent e) {  
+                    //I want something to happen before the row change is triggered on the UI.
+                   loadInvoiceOrderlines();
+                   System.out.println(jtInvoices.getSelectedRow());
+                }  
+            }); 
+            
+            jtOrderitems.getSelectionModel().addListSelectionListener(new ListSelectionListener() {  
+
+                public void valueChanged(ListSelectionEvent e) {  
+                   System.out.println(jtOrderitems.getSelectedRow());
+                   System.out.println(jtOrderitems.getModel().getValueAt(jtOrderitems.getSelectedRow(), 0));
+                }  
+            }); 
+            
+            loadTableTitle();
+            loadInvoices();
+            loadInvoiceOrderlines();
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Fatal error: can not connect to database.", "database error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+            System.exit(1);
+        }
     }
     
     private void loadTableTitle(){
@@ -53,11 +89,11 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         modelInvoices.addColumn("TotalAmount");
         modelInvoices.addColumn("Date");
         
-        modelInvoiceOrderlines.addColumn("OrderId");
-        modelInvoiceOrderlines.addColumn("ProductDescription");
-        modelInvoiceOrderlines.addColumn("UnitPrice");
-        modelInvoiceOrderlines.addColumn("Quantity");
-        modelInvoiceOrderlines.addColumn("ItemTotal");
+        modelInvoiceOrderItems.addColumn("OrderId");
+        modelInvoiceOrderItems.addColumn("ProductDescription");
+        modelInvoiceOrderItems.addColumn("UnitPrice");
+        modelInvoiceOrderItems.addColumn("Quantity");
+        modelInvoiceOrderItems.addColumn("ItemTotal");
         
         dlgIssueOrdersModel.addColumn("Id");
         dlgIssueOrdersModel.addColumn("CustomerName");
@@ -80,45 +116,177 @@ public class MainFrameInvoice extends javax.swing.JFrame {
     
     private void loadInvoices(){
        
-        modelInvoices.setRowCount(0);
-        
-        Object[][] data = {
-            {new Integer(1),new Integer(78), "Smith",
-             "Snowboarding", new Integer(5),new Integer(5),new Integer(5),"2018-2-3"},
-            {new Integer(3),new Integer(78), "Doe",
-             "Rowing", new Integer(3),new Integer(5),new Integer(5),"2018-2-3"},
-            {new Integer(4),new Integer(78), "Black",
-             "Knitting", new Integer(2),new Integer(5),new Integer(5),"2018-2-3"},
-            {new Integer(5),new Integer(12),"Jane",
-             "Speed reading", new Integer(20),new Integer(5),new Integer(5),"2018-2-3"},
-            {new Integer(7),new Integer(12), "Brown",
-             "Pool", new Integer(10),new Integer(5),new Integer(5),"2018-2-3"}
-        };
-        for(Object da[] : data){
-            modelInvoices.addRow(da);
+        try {
+            modelInvoices.setRowCount(0); 
+           
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            java.util.Date dateFrom = null;
+            java.util.Date dateTo = null;
+            if(!txtDateFrom.getText().isEmpty()){
+                dateFrom = df.parse(txtDateFrom.getText());
+            }
+            if(!txtDateTo.getText().isEmpty()){            
+                dateTo = df.parse(txtDateTo.getText());
+            }
+            List<Invoice> invoices = db.getInvoices(txtCustomerName.getText(), dateFrom, dateTo);
+            for(Invoice invoice : invoices){
+                modelInvoices.addRow(new Object[]{
+                    invoice.getId(), 
+                    invoice.getCustomer().getId(), invoice.getCustomer().getName(), invoice.getCustomer().getAddress(),
+                    invoice.getAmountBeforeTax(), invoice.getAmountTax(), invoice.getTotalAmount(), df.format(invoice.getTimestamp())
+                });
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error: unable to reload invoice(s)\n" + ex.getMessage(), "database error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        } catch (ParseException ex) {
+            JOptionPane.showMessageDialog(null, "Error: converting date(should be yyyy-MM-dd):\n" + ex.getMessage(), "date error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
         }
     }
     
     private void loadInvoiceOrderlines(){
 
-        modelInvoiceOrderlines.setRowCount(0);
-        
-        int invoicesSelected = jtInvoices.getSelectedRows().length;
-        if(0 == invoicesSelected || invoicesSelected > 1){
-            System.out.println("0 row selected.");
-            return;
-        }
-        
-        Object[][] data = {
-            {new Integer(3), "Smith",
-             new Integer(3),new Integer(5),new Integer(5)},
-            {new Integer(3), "Doe",
-             new Integer(3),new Integer(5),new Integer(5)}
-        };
-        for(Object da[] : data){
-            modelInvoiceOrderlines.addRow(da);
+        try {
+            modelInvoiceOrderItems.setRowCount(0);
+            
+            int invoicesSelected = jtInvoices.getSelectedRows().length;
+            if(0 == invoicesSelected || invoicesSelected > 1){
+                System.out.println("0 row selected.");
+                return;
+            }
+            Object invoiceId = jtInvoices.getModel().getValueAt(jtInvoices.getSelectedRow(), 0);
+            List<SalesOrder> orders = db.getOrders(Integer.parseInt(invoiceId.toString()));
+            for(int i = 0; i < orders.size(); i++){
+                List<OrderItem> items = orders.get(i).getItems();
+                for(OrderItem item : items){
+                    modelInvoiceOrderItems.addRow(new Object[]{
+                        orders.get(i).getId(),
+                        item.getProduct().getDescription(), item.getProduct().getUnitPrice(),
+                        item.getQuantity(), item.getItemTotal()
+                    });
+                }
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error: unable to reload order item(s)\n" + ex.getMessage(), "database error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
         }
     }
+    
+    
+    private void loadOrdersForIssue(){
+
+        try {
+            dlgIssueOrdersModel.setRowCount(0); 
+           
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            
+            List<SalesOrder> orders = db.getOrders(dlgIssue_txtCustomerName.getText(),"notcomplete");
+            for(SalesOrder order : orders){
+                dlgIssueOrdersModel.addRow(new Object[]{
+                    order.getId(), 
+                    order.getCustomer().getName(), df.format(order.getTimestamp()),
+                    order.getAmountBeforeTax(), order.getAmountTax(), order.getTotalAmount()
+                });
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error: unable to reload order(s)\n" + ex.getMessage(), "database error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        } 
+    }
+    
+    private void loadOrders(){
+       
+          try {
+            dlgOrdersModel.setRowCount(0); 
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            
+            List<SalesOrder> orders = db.getOrders();
+            for(SalesOrder order : orders){
+                dlgOrdersModel.addRow(new Object[]{
+                    order.getId(), 
+                    order.getCustomer().getName(),
+		    df.format(order.getTimestamp()),
+                    order.getTotalAmount(), 
+                });
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error: unable to reload order(s)\n" + ex.getMessage(), "database error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        } //catch (ParseException ex) {
+          // JOptionPane.showMessageDialog(null, "Error: converting date(should be yyyy-MM-dd):\n" + ex.getMessage(), "date error", JOptionPane.ERROR_MESSAGE);
+          //  ex.printStackTrace();
+       // }
+    }
+    
+    
+    private void loadOrdersWithSearch(){
+       
+        try {
+            dlgOrdersModel.setRowCount(0); 
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            
+            List<SalesOrder> orders = db.getOrders(dlgOrders_txtCustomerName.getText(), 
+				dlgOrders_cbStatus.getSelectedItem().toString(),
+				Integer.parseInt(dlgOrders_txtOrderId.getText()));
+            for(SalesOrder order : orders){
+                dlgOrdersModel.addRow(new Object[]{
+                    order.getId(), 
+                    order.getCustomer().getName(),
+		    df.format(order.getTimestamp()),
+                    order.getTotalAmount(), 
+                });
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error: unable to reload order(s)\n" + ex.getMessage(), "database error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        } //catch (ParseException ex) {
+          // JOptionPane.showMessageDialog(null, "Error: converting date(should be yyyy-MM-dd):\n" + ex.getMessage(), "date error", JOptionPane.ERROR_MESSAGE);
+          //  ex.printStackTrace();
+       // }
+    }
+    
+    
+    
+    
+    private void loadOrderItems(){
+
+        try {
+            dlgOrdersItemsModel.setRowCount(0);
+            
+            int orderS = dlgOrders_jtOrders.getSelectedRows().length;
+            System.out.println(orderS);
+            if(0 == orderS || orderS> 1){
+                System.out.println("0 row selected.");
+                return;
+            }
+            Object orderId = dlgOrders_jtOrders.getModel().getValueAt(dlgOrders_jtOrders.getSelectedRow(), 0);
+            System.out.println(orderId);
+            
+          List<SalesOrder> orders = db.getOrders(Integer.parseInt(orderId.toString()));
+           System.out.println (orders);
+           for(int i = 0; i < orders.size(); i++){
+                List<OrderItem> items = db.getOrderItemsByOrderId(Integer.parseInt(orderId.toString()));
+              //  List<OrderItem> items = db.getOrderItemsByOrderId(orders.get(i).getId());
+                System.out.println(orders.get(i).getId());
+                System.out.println(items);
+                for(OrderItem item : items){
+                   	dlgOrdersItemsModel.addRow(new Object[]{
+                        //orders.get(i).getId(),
+                        item.getProduct().getId(),
+                        item.getProduct().getDescription(), item.getProduct().getUnitPrice(),
+                        item.getQuantity(), item.getItemTotal()
+                    });
+                }
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error: unable to reload order item(s)\n" + ex.getMessage(), "database error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
+
+
+
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -181,10 +349,15 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         dlgIssue.setTitle("Issue Invoice");
         dlgIssue.setModal(true);
         dlgIssue.setResizable(false);
+        dlgIssue.addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentShown(java.awt.event.ComponentEvent evt) {
+                dlgIssueComponentShown(evt);
+            }
+        });
 
         jLabel7.setText("Orders");
 
-        jLabel9.setText("Customer");
+        jLabel9.setText("Customer name");
 
         dlgIssue_btnSearch.setText("Search");
         dlgIssue_btnSearch.addActionListener(new java.awt.event.ActionListener() {
@@ -208,6 +381,7 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         });
 
         dlgIssue_jtOrders.setModel(dlgIssueOrdersModel);
+        dlgIssue_jtOrders.setRowHeight(20);
         jScrollPane1.setViewportView(dlgIssue_jtOrders);
 
         javax.swing.GroupLayout dlgIssueLayout = new javax.swing.GroupLayout(dlgIssue.getContentPane());
@@ -247,22 +421,20 @@ public class MainFrameInvoice extends javax.swing.JFrame {
                     .addComponent(dlgIssue_btnSearch))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(dlgIssueLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(dlgIssueLayout.createSequentialGroup()
-                        .addComponent(jLabel7)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(dlgIssueLayout.createSequentialGroup()
+                    .addComponent(jLabel7, javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, dlgIssueLayout.createSequentialGroup()
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 388, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addGroup(dlgIssueLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(dlgIssue_btnSave)
-                            .addComponent(dlgIssue_btnCancel))
-                        .addGap(30, 30, Short.MAX_VALUE))))
+                            .addComponent(dlgIssue_btnCancel))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         dlgOrders.setTitle("Query Sales Orders");
         dlgOrders.setModal(true);
 
-        jLabel10.setText("Customer");
+        jLabel10.setText("Customer name");
 
         jLabel11.setText("Order Id");
 
@@ -282,9 +454,11 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         jLabel14.setText("OrderItem(s)");
 
         dlgOrders_jtOrders.setModel(dlgOrdersModel);
+        dlgOrders_jtOrders.setRowHeight(20);
         jScrollPane2.setViewportView(dlgOrders_jtOrders);
 
         dlgOrders_jtItems.setModel(dlgOrdersItemsModel);
+        dlgOrders_jtItems.setRowHeight(20);
         jScrollPane3.setViewportView(dlgOrders_jtItems);
 
         javax.swing.GroupLayout dlgOrdersLayout = new javax.swing.GroupLayout(dlgOrders.getContentPane());
@@ -357,13 +531,18 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         jLabel1.setPreferredSize(new java.awt.Dimension(34, 18));
         getContentPane().add(jLabel1, java.awt.BorderLayout.PAGE_END);
 
-        jLabel2.setText("Customer");
+        jLabel2.setText("Customer name");
 
-        jLabel3.setText("Date from");
+        jLabel3.setText("Date(yyyy-MM-dd) from");
 
         jLabel4.setText("to");
 
         btnSearch.setText("Search");
+        btnSearch.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSearchActionPerformed(evt);
+            }
+        });
 
         jLabel5.setText("Invoices");
 
@@ -376,14 +555,10 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         jtInvoices.setRowMargin(2);
         jtInvoices.setSelectionBackground(new java.awt.Color(102, 102, 102));
         jtInvoices.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-        jtInvoices.addVetoableChangeListener(new java.beans.VetoableChangeListener() {
-            public void vetoableChange(java.beans.PropertyChangeEvent evt)throws java.beans.PropertyVetoException {
-                jtInvoicesVetoableChange(evt);
-            }
-        });
         jScrollPane8.setViewportView(jtInvoices);
 
-        jtOrderitems.setModel(modelInvoiceOrderlines);
+        jtOrderitems.setModel(modelInvoiceOrderItems);
+        jtOrderitems.setRowHeight(20);
         jScrollPane9.setViewportView(jtOrderitems);
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -430,10 +605,10 @@ public class MainFrameInvoice extends javax.swing.JFrame {
                 .addGap(18, 18, 18)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel5)
-                    .addComponent(jScrollPane8, javax.swing.GroupLayout.PREFERRED_SIZE, 344, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jScrollPane8, javax.swing.GroupLayout.PREFERRED_SIZE, 321, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane9, javax.swing.GroupLayout.PREFERRED_SIZE, 174, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jScrollPane9, javax.swing.GroupLayout.PREFERRED_SIZE, 193, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel6))
                 .addContainerGap(30, Short.MAX_VALUE))
         );
@@ -443,6 +618,11 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         jMenu1.setText("File");
 
         miExPDF.setText("Export selected invoice to PDF");
+        miExPDF.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miExPDFActionPerformed(evt);
+            }
+        });
         jMenu1.add(miExPDF);
 
         miExCSV.setText("Export selected invoice(s) to CSV");
@@ -484,11 +664,6 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jtInvoicesVetoableChange(java.beans.PropertyChangeEvent evt)throws java.beans.PropertyVetoException {//GEN-FIRST:event_jtInvoicesVetoableChange
-        
-        System.out.println("invoices");
-    }//GEN-LAST:event_jtInvoicesVetoableChange
-
     private void dlgIssue_btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dlgIssue_btnCancelActionPerformed
         
         dlgIssue.setVisible(false);
@@ -496,16 +671,63 @@ public class MainFrameInvoice extends javax.swing.JFrame {
 
     private void dlgOrders_btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dlgOrders_btnSearchActionPerformed
         
-        
+        loadOrdersWithSearch();
     }//GEN-LAST:event_dlgOrders_btnSearchActionPerformed
 
     private void dlgIssue_btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dlgIssue_btnSearchActionPerformed
         
-        
+        loadOrdersForIssue();
     }//GEN-LAST:event_dlgIssue_btnSearchActionPerformed
 
     private void dlgIssue_btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dlgIssue_btnSaveActionPerformed
+         
+        if(0 == dlgIssue_jtOrders.getSelectedRowCount()){
+            JOptionPane.showMessageDialog(this, "Warning: please select order(s)\n" , "Issure invoice", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
         
+        try {
+            
+            int[] selectedRows = dlgIssue_jtOrders.getSelectedRows();
+            List<SalesOrder> orders = new ArrayList<>();
+            BigDecimal amountBeforeTax = BigDecimal.valueOf(0);
+            BigDecimal amountTax = BigDecimal.valueOf(0);
+            BigDecimal totalAmount = BigDecimal.valueOf(0);
+            for(int i = 0; i < selectedRows.length; i++){
+                SalesOrder order = new SalesOrder();
+                try{
+                    Object orderId = dlgIssueOrdersModel.getValueAt(selectedRows[i], 0);
+                    order = db.getOrderById(Integer.parseInt(orderId.toString()));
+                    System.out.println("selected order id = " + orderId);
+                }catch (SQLException ex) {
+                    JOptionPane.showMessageDialog(null, "Error executing SQL query:\n" + ex.getMessage(), "database error", JOptionPane.ERROR_MESSAGE);
+                    ex.printStackTrace();
+                    return;
+                }                
+                
+                // calculate amount for invoice
+                amountBeforeTax = amountBeforeTax.add(order.getAmountBeforeTax());
+                amountTax = amountTax.add(order.getAmountTax());
+                totalAmount = totalAmount.add(order.getTotalAmount());
+                
+                order.setStatus(OrderStatus.complete);
+                orders.add(order);
+            }
+            
+            Invoice invoice = new Invoice();
+            invoice.setTimestamp(new Date(new java.util.Date().getTime()));
+            invoice.setAmountBeforeTax(amountBeforeTax);
+            invoice.setAmountTax(amountTax);
+            invoice.setTotalAmount(totalAmount);
+            invoice.setSalesOrder(orders);
+            
+            db.addInvoice(invoice);
+            loadOrdersForIssue();
+            loadInvoices();
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Error executing SQL query(insert):\n" + ex.getMessage(), "database error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
     }//GEN-LAST:event_dlgIssue_btnSaveActionPerformed
 
     private void miExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miExitActionPerformed
@@ -514,7 +736,23 @@ public class MainFrameInvoice extends javax.swing.JFrame {
     }//GEN-LAST:event_miExitActionPerformed
 
     private void menuQueryOrdesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_menuQueryOrdesMouseClicked
-        
+        dlgOrders_jtOrders.getSelectionModel().addListSelectionListener(new ListSelectionListener() {  
+
+                public void valueChanged(ListSelectionEvent e) {  
+                    //I want something to happen before the row change is triggered on the UI.
+                 // loadOrderItems();
+                   System.out.println(dlgOrders_jtOrders.getSelectedRow());
+                }  
+            }); 
+        dlgOrders_jtItems.getSelectionModel().addListSelectionListener(new ListSelectionListener() {  
+
+                public void valueChanged(ListSelectionEvent e) {  
+                   System.out.println(dlgOrders_jtItems.getSelectedRow());
+                   System.out.println(dlgOrders_jtItems.getModel().getValueAt(dlgOrders_jtItems.getSelectedRow(), 0));
+                }  
+            }); 
+        loadOrders();
+        loadOrderItems();
         dlgOrders.pack();
         dlgOrders.setLocationRelativeTo(SwingUtilities.getWindowAncestor((Component) evt.getSource()));
         dlgOrders.setVisible(true);
@@ -522,10 +760,44 @@ public class MainFrameInvoice extends javax.swing.JFrame {
 
     private void menuIssueMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_menuIssueMouseClicked
         
+        System.out.println("issue menu click.");
         dlgIssue.pack();
         dlgIssue.setLocationRelativeTo(SwingUtilities.getWindowAncestor((Component) evt.getSource()));
         dlgIssue.setVisible(true);
     }//GEN-LAST:event_menuIssueMouseClicked
+
+    private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
+        
+        loadInvoices();
+        loadInvoiceOrderlines();
+    }//GEN-LAST:event_btnSearchActionPerformed
+
+    private void dlgIssueComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_dlgIssueComponentShown
+        
+        loadOrdersForIssue();
+        System.out.println("dlgIssue component shown.");
+    }//GEN-LAST:event_dlgIssueComponentShown
+
+    private void miExPDFActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miExPDFActionPerformed
+        
+        try {
+            int invoicesSelected = jtInvoices.getSelectedRows().length;
+            if(0 == invoicesSelected || invoicesSelected > 1){
+                JOptionPane.showMessageDialog(this, "Warning: please select order(ONLY one line)\n" , "Export pdf for invoice", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            Object invoiceId = modelInvoices.getValueAt(jtInvoices.getSelectedRow(), 0);
+            Invoice invoice = db.getInvoiceById(Integer.parseInt(invoiceId.toString()));
+            
+            Utils.createInvoicePdf(invoice);
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Error executing SQL query:\n" + ex.getMessage(), "database error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, "Error export pdf:\n" + ex.getMessage(), "export pdf error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }//GEN-LAST:event_miExPDFActionPerformed
 
     /**
      * @param args the command line arguments

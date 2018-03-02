@@ -6,7 +6,9 @@
 package ipd12.entity;
 
 import java.math.BigDecimal;
+
 import java.util.Date;
+import java.util.List;
 
 /**
  *
@@ -14,20 +16,25 @@ import java.util.Date;
  */
 public class SalesOrder {
     
-     private int id;
+    private int id;
     private int customerId;
-    private Date timestamp;
+    private java.sql.Date timestamp;
     private BigDecimal amountBeforeTax;
     private BigDecimal amountTax;
     private BigDecimal totalAmount;
-    private Status status;
+    private OrderStatus status;
+    private List<OrderItem> items;
+    private Invoice invoice;
+    private Customer customer;
     
-    enum Status{
-        complete, notcomplete
+    
+    
+    public SalesOrder(){
     }
     
-    
-    SalesOrder(int id, int customerId, Date timestamp, BigDecimal amountBeforeTax, BigDecimal amountTax, BigDecimal totalAmount, Status status){
+    public SalesOrder(int id, int customerId, java.sql.Date timestamp, BigDecimal amountBeforeTax, 
+            BigDecimal amountTax, BigDecimal totalAmount, OrderStatus status,
+            List<OrderItem> items){
             setId(id);
             setCustomerId(customerId);
             setTimestamp(timestamp);
@@ -35,10 +42,12 @@ public class SalesOrder {
             setAmountTax(amountTax);
             setTotalAmount(totalAmount);
             setStatus(status);
-    
+            this.items = items;
+           
     }
     
-    SalesOrder(int customerId,BigDecimal amountBeforeTax, BigDecimal amountTax, BigDecimal totalAmount, Status status){
+    public SalesOrder(int customerId,BigDecimal amountBeforeTax, BigDecimal amountTax, 
+            BigDecimal totalAmount, OrderStatus status, List<OrderItem> items,Invoice invoice){
             setId(id);
             setCustomerId(customerId);
             setTimestamp(timestamp);
@@ -46,7 +55,8 @@ public class SalesOrder {
             setAmountTax(amountTax);
             setTotalAmount(totalAmount);
             setStatus(status);
-    
+            this.items = items;
+            this.invoice = invoice;
     }
 
     /**
@@ -80,14 +90,14 @@ public class SalesOrder {
     /**
      * @return the timestamp
      */
-    public Date getTimestamp() {
+    public java.sql.Date getTimestamp() {
         return timestamp;
     }
 
     /**
      * @param timestamp the timestamp to set
      */
-    public void setTimestamp(Date timestamp) {
+    public void setTimestamp(java.sql.Date timestamp) {
         this.timestamp = timestamp;
     }
 
@@ -136,21 +146,51 @@ public class SalesOrder {
     /**
      * @return the status
      */
-    public Status getStatus() {
+    public OrderStatus getStatus() {
         return status;
     }
 
     /**
      * @param status the status to set
      */
-    public void setStatus(Status status) {
+    public void setStatus(OrderStatus status) {
         this.status = status;
     }
-   
-    
-    
-    
-    
-    
+
+    /**
+     * @return the items
+     */
+    public List<OrderItem> getItems() {
+        return items;
+    }
+
+    /**
+     * @param items the items to set
+     */
+    public void setItems(List<OrderItem> items) {
+        this.items = items;
+    }
+
+    /**
+     * @return the invoice
+     */
+    public Invoice getInvoice() {
+        return invoice;
+    }
+
+    /**
+     * @param invoice the invoice to set
+     */
+    public void setInvoice(Invoice invoice) {
+        this.invoice = invoice;
+    }
+
+    public Customer getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
+    }    
     
 }
