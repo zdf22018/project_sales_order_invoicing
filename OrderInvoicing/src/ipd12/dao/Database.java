@@ -116,6 +116,34 @@ public class Database {
         return invoices;
     }
     
+    public Invoice getInvoiceById(int id) throws SQLException{
+        Invoice invoice = new Invoice();
+        StringBuilder sbSql = new StringBuilder();
+        sbSql.append("select id, timestamp, amountBeforeTax, amountTax, totalAmount, payment ");       
+        sbSql.append("from invoices where id=");
+        sbSql.append(id);
+        try(
+                Statement st = conn.createStatement();
+                ResultSet rt = st.executeQuery(sbSql.toString());
+            ){
+            if(rt.next()){
+                List<SalesOrder> saleOrders = getOrders(rt.getInt(1));
+                Customer customer = new Customer();
+                for(SalesOrder order : saleOrders){
+                    customer = getCustomerById(order.getCustomerId());
+                    break;
+                }
+                
+                invoice = new Invoice(rt.getInt(1),rt.getDate(2), saleOrders, customer);
+                invoice.setAmountBeforeTax(rt.getBigDecimal(3));
+                invoice.setAmountTax(rt.getBigDecimal(4));
+                invoice.setTotalAmount(rt.getBigDecimal(5));
+            }
+        }
+        
+        return invoice;
+    }
+    
     public void addInvoice(Invoice invoice) throws SQLException{
         
         if(null == invoice){

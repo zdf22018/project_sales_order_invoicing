@@ -34,7 +34,7 @@ public class SalesOrder {
     
     public SalesOrder(int id, int customerId, java.sql.Date timestamp, BigDecimal amountBeforeTax, 
             BigDecimal amountTax, BigDecimal totalAmount, OrderStatus status,
-            List items){
+            List<OrderItem> items){
             setId(id);
             setCustomerId(customerId);
             setTimestamp(timestamp);
@@ -42,12 +42,12 @@ public class SalesOrder {
             setAmountTax(amountTax);
             setTotalAmount(totalAmount);
             setStatus(status);
-            items= this.items;
+            this.items = items;
            
     }
     
     public SalesOrder(int customerId,BigDecimal amountBeforeTax, BigDecimal amountTax, 
-            BigDecimal totalAmount, OrderStatus status, List items,Invoice invoice){
+            BigDecimal totalAmount, OrderStatus status, List<OrderItem> items,Invoice invoice){
             setId(id);
             setCustomerId(customerId);
             setTimestamp(timestamp);
@@ -55,7 +55,7 @@ public class SalesOrder {
             setAmountTax(amountTax);
             setTotalAmount(totalAmount);
             setStatus(status);
-            items= this.items;
+            this.items = items;
             this.invoice = invoice;
     }
 

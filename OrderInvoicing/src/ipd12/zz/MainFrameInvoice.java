@@ -12,6 +12,7 @@ import ipd12.entity.OrderStatus;
 import ipd12.entity.SalesOrder;
 import java.awt.Component;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.SQLException;
@@ -157,7 +158,7 @@ public class MainFrameInvoice extends javax.swing.JFrame {
             Object invoiceId = jtInvoices.getModel().getValueAt(jtInvoices.getSelectedRow(), 0);
             List<SalesOrder> orders = db.getOrders(Integer.parseInt(invoiceId.toString()));
             for(int i = 0; i < orders.size(); i++){
-                List<OrderItem> items = db.getOrderItemsByOrderId(orders.get(i).getId());
+                List<OrderItem> items = orders.get(i).getItems();
                 for(OrderItem item : items){
                     modelInvoiceOrderItems.addRow(new Object[]{
                         orders.get(i).getId(),
@@ -524,6 +525,11 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         jMenu1.setText("File");
 
         miExPDF.setText("Export selected invoice to PDF");
+        miExPDF.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miExPDFActionPerformed(evt);
+            }
+        });
         jMenu1.add(miExPDF);
 
         miExCSV.setText("Export selected invoice(s) to CSV");
@@ -662,6 +668,27 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         loadOrdersForIssue();
         System.out.println("dlgIssue component shown.");
     }//GEN-LAST:event_dlgIssueComponentShown
+
+    private void miExPDFActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miExPDFActionPerformed
+        
+        try {
+            int invoicesSelected = jtInvoices.getSelectedRows().length;
+            if(0 == invoicesSelected || invoicesSelected > 1){
+                JOptionPane.showMessageDialog(this, "Warning: please select order(ONLY one line)\n" , "Export pdf for invoice", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            Object invoiceId = modelInvoices.getValueAt(jtInvoices.getSelectedRow(), 0);
+            Invoice invoice = db.getInvoiceById(Integer.parseInt(invoiceId.toString()));
+            
+            Utils.createInvoicePdf(invoice);
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Error executing SQL query:\n" + ex.getMessage(), "database error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, "Error export pdf:\n" + ex.getMessage(), "export pdf error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }//GEN-LAST:event_miExPDFActionPerformed
 
     /**
      * @param args the command line arguments
