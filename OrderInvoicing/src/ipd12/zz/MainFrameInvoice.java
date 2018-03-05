@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.mail.Transport;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -92,6 +93,8 @@ public class MainFrameInvoice extends javax.swing.JFrame {
             loadTableTitle();
             loadInvoices();
             loadInvoiceOrderlines();
+            lbStatus.setText(jtInvoices.getRowCount() + "" + " invoices displayed");
+
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Fatal error: can not connect to database.", "database error", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
@@ -341,7 +344,8 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         dlgOrders_jtOrders = new javax.swing.JTable();
         jScrollPane3 = new javax.swing.JScrollPane();
         dlgOrders_jtItems = new javax.swing.JTable();
-        jLabel1 = new javax.swing.JLabel();
+        dlgOrderStatus = new javax.swing.JLabel();
+        lbStatus = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
         txtCustomerName = new javax.swing.JTextField();
@@ -486,6 +490,8 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         dlgOrders_jtItems.setRowHeight(20);
         jScrollPane3.setViewportView(dlgOrders_jtItems);
 
+        dlgOrderStatus.setText("Status");
+
         javax.swing.GroupLayout dlgOrdersLayout = new javax.swing.GroupLayout(dlgOrders.getContentPane());
         dlgOrders.getContentPane().setLayout(dlgOrdersLayout);
         dlgOrdersLayout.setHorizontalGroup(
@@ -521,6 +527,10 @@ public class MainFrameInvoice extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(dlgOrders_btnSearch)
                         .addGap(38, 38, 38))))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, dlgOrdersLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(dlgOrderStatus, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
         dlgOrdersLayout.setVerticalGroup(
             dlgOrdersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -542,19 +552,21 @@ public class MainFrameInvoice extends javax.swing.JFrame {
                 .addGroup(dlgOrdersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel14)
                     .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 217, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(30, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(dlgOrderStatus)
+                .addContainerGap())
         );
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Invoicing System");
         setResizable(false);
 
-        jLabel1.setText("Status");
-        jLabel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-        jLabel1.setMaximumSize(new java.awt.Dimension(34, 18));
-        jLabel1.setMinimumSize(new java.awt.Dimension(34, 18));
-        jLabel1.setPreferredSize(new java.awt.Dimension(34, 18));
-        getContentPane().add(jLabel1, java.awt.BorderLayout.PAGE_END);
+        lbStatus.setText("Status");
+        lbStatus.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        lbStatus.setMaximumSize(new java.awt.Dimension(34, 18));
+        lbStatus.setMinimumSize(new java.awt.Dimension(34, 18));
+        lbStatus.setPreferredSize(new java.awt.Dimension(34, 18));
+        getContentPane().add(lbStatus, java.awt.BorderLayout.PAGE_END);
 
         jLabel2.setText("Customer name");
 
@@ -659,6 +671,11 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         jMenu1.add(miExCSV);
 
         miExCSVEmail.setText("Export selected invoice(s) to CSV&Email");
+        miExCSVEmail.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miExCSVEmailActionPerformed(evt);
+            }
+        });
         jMenu1.add(miExCSVEmail);
         jMenu1.add(jSeparator1);
 
@@ -702,6 +719,7 @@ public class MainFrameInvoice extends javax.swing.JFrame {
     private void dlgOrders_btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dlgOrders_btnSearchActionPerformed
 
         loadOrdersWithSearch();
+        dlgOrderStatus.setText(dlgOrders_jtOrders.getRowCount() + "" + " orders displayed");
     }//GEN-LAST:event_dlgOrders_btnSearchActionPerformed
 
     private void dlgIssue_btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dlgIssue_btnSearchActionPerformed
@@ -769,9 +787,11 @@ public class MainFrameInvoice extends javax.swing.JFrame {
 
         //loadOrders();
         //loadOrderItems();
+        dlgOrderStatus.setText(dlgOrders_jtOrders.getRowCount() + "" + " orders displayed");
         dlgOrders.pack();
         dlgOrders.setLocationRelativeTo(SwingUtilities.getWindowAncestor((Component) evt.getSource()));
         dlgOrders.setVisible(true);
+
     }//GEN-LAST:event_menuQueryOrdesMouseClicked
 
     private void menuIssueMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_menuIssueMouseClicked
@@ -786,6 +806,7 @@ public class MainFrameInvoice extends javax.swing.JFrame {
 
         loadInvoices();
         loadInvoiceOrderlines();
+        lbStatus.setText(jtInvoices.getRowCount() + "" + " invoices displayed");
     }//GEN-LAST:event_btnSearchActionPerformed
 
     private void dlgIssueComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_dlgIssueComponentShown
@@ -831,14 +852,15 @@ public class MainFrameInvoice extends javax.swing.JFrame {
                 }
                 try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
                     Object invoiceId = modelInvoices.getValueAt(jtInvoices.getSelectedRow(), 0);
+
                     Invoice invoice = db.getInvoiceById(Integer.parseInt(invoiceId.toString()));
                     for (SalesOrder order : invoice.getSalesOrder()) { //iterate through the SalesOrder list
                         out.printf("%d;%d;%s;%.1f;%.1f;%.1f;\n", invoice.getId(), invoice.getCustomer().getId(), invoice.getCustomer().getName(),
                                 invoice.getAmountBeforeTax(), invoice.getAmountTax(), invoice.getTotalAmount());
-                         out.printf("%d\n",order.getId());
+                        out.printf("%d\n", order.getId());
                         for (OrderItem item : order.getItems()) {
-                             
-                             out.printf("%s;%.2f;%.2f;%.2f\n", item.getProduct().getDescription(), item.getProduct().getUnitPrice(), item.getQuantity(), item.getItemTotal());
+
+                            out.printf("%s;%.2f;%.2f;%.2f\n", item.getProduct().getDescription(), item.getProduct().getUnitPrice(), item.getQuantity(), item.getItemTotal());
                         }
                     }
                 } catch (IOException ex) {
@@ -854,6 +876,27 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         }
 
     }//GEN-LAST:event_miExCSVActionPerformed
+
+    private void miExCSVEmailActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miExCSVEmailActionPerformed
+        String email = "";
+        String fileName ="";
+       final String user="zdfmontreal13@gmail.com";//change accordingly  
+        final String password="zoe20178";//change accordingly  
+        
+        try {
+            Object invoiceId = modelInvoices.getValueAt(jtInvoices.getSelectedRow(), 0);
+            Invoice invoice = db.getInvoiceById(Integer.parseInt(invoiceId.toString()));
+            email = invoice.getCustomer().getEmail();
+            fileName = invoice.getCustomer().getName()+"111";
+            File file = new File("C:\\Users\\ITC\\Documents\\project_sales_order_invoicing\\docs" +fileName+ ".csv");
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(MainFrameInvoice.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        System.out.println(email);
+        Mailer.send(user, password, email, "invoice","please check invoice");
+
+    }//GEN-LAST:event_miExCSVEmailActionPerformed
 
     /**
      * @param args the command line arguments
@@ -898,6 +941,7 @@ public class MainFrameInvoice extends javax.swing.JFrame {
     private javax.swing.JButton dlgIssue_btnSearch;
     private javax.swing.JTable dlgIssue_jtOrders;
     private javax.swing.JTextField dlgIssue_txtCustomerName;
+    private javax.swing.JLabel dlgOrderStatus;
     private javax.swing.JDialog dlgOrders;
     private javax.swing.JButton dlgOrders_btnSearch;
     private javax.swing.JComboBox<String> dlgOrders_cbStatus;
@@ -906,7 +950,6 @@ public class MainFrameInvoice extends javax.swing.JFrame {
     private javax.swing.JTextField dlgOrders_txtCustomerName;
     private javax.swing.JTextField dlgOrders_txtOrderId;
     private javax.swing.JFileChooser fileChooser;
-    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
@@ -930,6 +973,7 @@ public class MainFrameInvoice extends javax.swing.JFrame {
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JTable jtInvoices;
     private javax.swing.JTable jtOrderitems;
+    private javax.swing.JLabel lbStatus;
     private javax.swing.JMenu menuIssue;
     private javax.swing.JMenu menuQueryOrdes;
     private javax.swing.JMenuItem miExCSV;
