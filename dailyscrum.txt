@@ -64,3 +64,10 @@ need to figure out how to send with attachment
 - fix bug
 3. Need assistance / figure things out
 
+2018/03/06 Jian
+1. Done/Not done since last srum
+- done: export pdf
+2. Plan until next Scrum
+- fix bug
+3. Need assistance / figure things out
+

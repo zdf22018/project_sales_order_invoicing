@@ -35,7 +35,7 @@ import java.io.IOException;
 public class Utils {
 
     public static final String LOGO = "img/logo.png";
-    public static final String DEST = "invoice/";
+    public static final String DEST = "export_invoices/pdf/";
     static PdfFont timesNewRoman = null;
     static PdfFont timesNewRomanBold = null;
         

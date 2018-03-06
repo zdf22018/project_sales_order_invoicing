@@ -315,7 +315,7 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         try {
             Object invoiceId = modelInvoices.getValueAt(jtInvoices.getSelectedRow(), 0);
             Invoice invoice = db.getInvoiceById(Integer.parseInt(invoiceId.toString()));
-            File file = new File("invoice_" +invoice.getCustomer().getName()+"_"+ invoiceId.toString() + ".csv");
+            File file = new File("export_invoices/csv/invoice_" +invoice.getCustomer().getName()+"_"+ invoiceId.toString() + ".csv");
             try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
 
                 for (SalesOrder order : invoice.getSalesOrder()) { //iterate through the SalesOrder list
@@ -856,11 +856,14 @@ public class MainFrameInvoice extends javax.swing.JFrame {
             Invoice invoice = db.getInvoiceById(Integer.parseInt(invoiceId.toString()));
 
             Utils.createInvoicePdf(invoice);
+            
+            JOptionPane.showMessageDialog(this, "Exported pdf file of the invoice successfully.", "Export pdf", JOptionPane.INFORMATION_MESSAGE);
+            
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, "Error executing SQL query:\n" + ex.getMessage(), "database error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error executing SQL query:\n" + ex.getMessage(), "database error", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
         } catch (IOException ex) {
-            JOptionPane.showMessageDialog(null, "Error export pdf:\n" + ex.getMessage(), "export pdf error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error export pdf:\n" + ex.getMessage(), "export pdf error", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
         }
     }//GEN-LAST:event_miExPDFActionPerformed
@@ -910,7 +913,7 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         exportCSV();
         String email = "";
         String fileName = "";
-        String file = "C:\\Users\\ITC\\Documents\\project_sales_order_invoicing\\OrderInvoicing";
+        String filePath = new File("").getAbsolutePath() + "\\export_invoices\\csv\\";
         final String user = "zdfmontreal13@gmail.com";//change accordingly  
         final String password = "zoe20178";//change accordingly  
 
@@ -925,7 +928,7 @@ public class MainFrameInvoice extends javax.swing.JFrame {
             Logger.getLogger(MainFrameInvoice.class.getName()).log(Level.SEVERE, null, ex);
         }
         System.out.println(email);
-        MailWithAttachment.send(user, password, email, "invoice", "please check invoice",file, fileName);
+        MailWithAttachment.send(user, password, email, "invoice", "please check invoice",filePath + fileName, fileName);
 
     }//GEN-LAST:event_miExCSVEmailActionPerformed
 
