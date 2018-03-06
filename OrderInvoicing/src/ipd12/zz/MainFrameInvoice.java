@@ -62,15 +62,15 @@ public class MainFrameInvoice extends javax.swing.JFrame {
                 public void valueChanged(ListSelectionEvent e) {
                     //I want something to happen before the row change is triggered on the UI.
                     loadInvoiceOrderlines();
-                    System.out.println(jtInvoices.getSelectedRow());
+                    //System.out.println(jtInvoices.getSelectedRow());
                 }
             });
 
             jtOrderitems.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 
                 public void valueChanged(ListSelectionEvent e) {
-                    System.out.println(jtOrderitems.getSelectedRow());
-                    System.out.println(jtOrderitems.getModel().getValueAt(jtOrderitems.getSelectedRow(), 0));
+                    //System.out.println(jtOrderitems.getSelectedRow());
+                    //System.out.println(jtOrderitems.getModel().getValueAt(jtOrderitems.getSelectedRow(), 0));
                 }
             });
 
@@ -79,14 +79,14 @@ public class MainFrameInvoice extends javax.swing.JFrame {
                 public void valueChanged(ListSelectionEvent e) {
                     //I want something to happen before the row change is triggered on the UI.
                     loadOrderItems();
-                    System.out.println(dlgOrders_jtOrders.getSelectedRow());
+                    //System.out.println(dlgOrders_jtOrders.getSelectedRow());
                 }
             });
             dlgOrders_jtItems.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 
                 public void valueChanged(ListSelectionEvent e) {
-                    System.out.println(dlgOrders_jtItems.getSelectedRow());
-                    System.out.println(dlgOrders_jtItems.getModel().getValueAt(dlgOrders_jtItems.getSelectedRow(), 0));
+                    //System.out.println(dlgOrders_jtItems.getSelectedRow());
+                    //System.out.println(dlgOrders_jtItems.getModel().getValueAt(dlgOrders_jtItems.getSelectedRow(), 0));
                 }
             });
 
@@ -175,7 +175,7 @@ public class MainFrameInvoice extends javax.swing.JFrame {
 
             int invoicesSelected = jtInvoices.getSelectedRows().length;
             if (0 == invoicesSelected || invoicesSelected > 1) {
-                System.out.println("0 row selected.");
+                //System.out.println("0 row selected.");
                 return;
             }
             Object invoiceId = jtInvoices.getModel().getValueAt(jtInvoices.getSelectedRow(), 0);

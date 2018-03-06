@@ -231,7 +231,7 @@ public class Database {
                 if(sbWhere.length() > 0){
                     sbWhere.append(" and ");
                 }
-                sbWhere.append(" invoiceId =");
+                sbWhere.append(" invoiceId=");
                 sbWhere.append(invoiceId);
             }
             
@@ -239,7 +239,7 @@ public class Database {
                  if(sbWhere.length() > 0){
                     sbWhere.append(" and ");
                 }
-                sbWhere.append("status = '");
+                sbWhere.append("status='");
                 sbWhere.append(status);
                 sbWhere.append("' ");
             }
@@ -247,7 +247,7 @@ public class Database {
                 if(sbWhere.length() > 0){
                     sbWhere.append(" and ");
                 }
-                sbWhere.append(" id =");
+                sbWhere.append(" id=");
                 sbWhere.append(orderId);
             }
         }
@@ -259,8 +259,8 @@ public class Database {
         else{
             sbSql.insert(0, "select top 10 ");
         }
-        sbSql.append("order by timestamp desc");
-        System.out.println(sbSql.toString());
+        sbSql.append(" order by timestamp desc");
+        //System.out.println(sbSql.toString());
         try(
                 Statement st = conn.createStatement();
                 ResultSet rt = st.executeQuery(sbSql.toString());
