@@ -311,6 +311,35 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         }
     }
 
+    private void exportCSV() { // to export selected invoice to csv using invoice+invoiceId as file name
+        try {
+            Object invoiceId = modelInvoices.getValueAt(jtInvoices.getSelectedRow(), 0);
+            Invoice invoice = db.getInvoiceById(Integer.parseInt(invoiceId.toString()));
+            File file = new File("invoice_" +invoice.getCustomer().getName()+"_"+ invoiceId.toString() + ".csv");
+            try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
+
+                for (SalesOrder order : invoice.getSalesOrder()) { //iterate through the SalesOrder list
+                    out.printf("%d;%d;%s;%.1f;%.1f;%.1f;\n", invoice.getId(), invoice.getCustomer().getId(), invoice.getCustomer().getName(),
+                            invoice.getAmountBeforeTax(), invoice.getAmountTax(), invoice.getTotalAmount());
+                    out.printf("%d\n", order.getId());
+                    for (OrderItem item : order.getItems()) {
+
+                        out.printf("%s;%.2f;%.2f;%.2f\n", item.getProduct().getDescription(), item.getProduct().getUnitPrice(), item.getQuantity(), item.getItemTotal());
+                    }
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(MainFrameInvoice.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Error saving data to file:\n" + ex.getMessage(),
+                    "File saving error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -878,23 +907,25 @@ public class MainFrameInvoice extends javax.swing.JFrame {
     }//GEN-LAST:event_miExCSVActionPerformed
 
     private void miExCSVEmailActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miExCSVEmailActionPerformed
+        exportCSV();
         String email = "";
-        String fileName ="";
-       final String user="zdfmontreal13@gmail.com";//change accordingly  
-        final String password="zoe20178";//change accordingly  
-        
+        String fileName = "";
+        String file = "C:\\Users\\ITC\\Documents\\project_sales_order_invoicing\\OrderInvoicing";
+        final String user = "zdfmontreal13@gmail.com";//change accordingly  
+        final String password = "zoe20178";//change accordingly  
+
         try {
             Object invoiceId = modelInvoices.getValueAt(jtInvoices.getSelectedRow(), 0);
             Invoice invoice = db.getInvoiceById(Integer.parseInt(invoiceId.toString()));
             email = invoice.getCustomer().getEmail();
-            fileName = invoice.getCustomer().getName()+"111";
-            File file = new File("C:\\Users\\ITC\\Documents\\project_sales_order_invoicing\\docs" +fileName+ ".csv");
-            
+            fileName = "invoice_" +invoice.getCustomer().getName()+"_"+ invoiceId.toString() + ".csv";
+
+            // File file = new File("C:\\Users\\ITC\\Documents\\project_sales_order_invoicing\\docs" +fileName+ ".csv");
         } catch (SQLException ex) {
             Logger.getLogger(MainFrameInvoice.class.getName()).log(Level.SEVERE, null, ex);
         }
         System.out.println(email);
-        Mailer.send(user, password, email, "invoice","please check invoice");
+        MailWithAttachment.send(user, password, email, "invoice", "please check invoice",file, fileName);
 
     }//GEN-LAST:event_miExCSVEmailActionPerformed
 
