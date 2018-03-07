@@ -1,8 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package ipd12.zz;
 
 import ipd12.dao.Database;
@@ -234,10 +230,8 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Error: unable to reload order(s)\n" + ex.getMessage(), "database error", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
-        } //catch (ParseException ex) {
-        // JOptionPane.showMessageDialog(null, "Error: converting date(should be yyyy-MM-dd):\n" + ex.getMessage(), "date error", JOptionPane.ERROR_MESSAGE);
-        //  ex.printStackTrace();
-        // }
+        } dlgOrderStatus.setText(dlgOrders_jtOrders.getRowCount() + "" + " orders displayed"); 
+
     }
 
     private void loadOrdersWithSearch() {
@@ -269,10 +263,8 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Error: unable to reload order(s)\n" + ex.getMessage(), "database error", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
-        } //catch (ParseException ex) {
-        // JOptionPane.showMessageDialog(null, "Error: converting date(should be yyyy-MM-dd):\n" + ex.getMessage(), "date error", JOptionPane.ERROR_MESSAGE);
-        //  ex.printStackTrace();
-        // }
+        } dlgOrderStatus.setText(dlgOrders_jtOrders.getRowCount() + "" + " orders displayed"); 
+
     }
 
     private void loadOrderItems() {
@@ -281,6 +273,7 @@ public class MainFrameInvoice extends javax.swing.JFrame {
             dlgOrdersItemsModel.setRowCount(0);
 
             int orderS = dlgOrders_jtOrders.getSelectedRows().length;
+            
             System.out.println(orderS);
             if (0 == orderS || orderS > 1) {
                 System.out.println("0 row selected.");
@@ -289,12 +282,8 @@ public class MainFrameInvoice extends javax.swing.JFrame {
             Object orderId = dlgOrders_jtOrders.getModel().getValueAt(dlgOrders_jtOrders.getSelectedRow(), 0);
             System.out.println(orderId);
 
-            //List<SalesOrder> orders = db.getOrders(Integer.parseInt(orderId.toString()));
-            //System.out.println (orders);
-            //for(int i = 0; i < orders.size(); i++){
             List<OrderItem> items = db.getOrderItemsByOrderId(Integer.parseInt(orderId.toString()));
-            //  List<OrderItem> items = db.getOrderItemsByOrderId(orders.get(i).getId());
-            //System.out.println(orders.get(i).getId());
+            
             System.out.println(items);
             for (OrderItem item : items) {
                 dlgOrdersItemsModel.addRow(new Object[]{
@@ -304,7 +293,7 @@ public class MainFrameInvoice extends javax.swing.JFrame {
                     item.getQuantity(), item.getItemTotal()
                 });
             }
-            //}
+          
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Error: unable to reload order item(s)\n" + ex.getMessage(), "database error", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
@@ -315,7 +304,7 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         try {
             Object invoiceId = modelInvoices.getValueAt(jtInvoices.getSelectedRow(), 0);
             Invoice invoice = db.getInvoiceById(Integer.parseInt(invoiceId.toString()));
-            File file = new File("export_invoices/csv/invoice_" +invoice.getCustomer().getName()+"_"+ invoiceId.toString() + ".csv");
+            File file = new File("export_invoices/csv/invoice_" + invoice.getCustomer().getName() + "_" + invoiceId.toString() + ".csv");
             try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
 
                 for (SalesOrder order : invoice.getSalesOrder()) { //iterate through the SalesOrder list
@@ -816,7 +805,7 @@ public class MainFrameInvoice extends javax.swing.JFrame {
 
         //loadOrders();
         //loadOrderItems();
-        dlgOrderStatus.setText(dlgOrders_jtOrders.getRowCount() + "" + " orders displayed");
+        //dlgOrderStatus.setText(dlgOrders_jtOrders.getRowCount() + "" + " orders displayed");
         dlgOrders.pack();
         dlgOrders.setLocationRelativeTo(SwingUtilities.getWindowAncestor((Component) evt.getSource()));
         dlgOrders.setVisible(true);
@@ -856,9 +845,9 @@ public class MainFrameInvoice extends javax.swing.JFrame {
             Invoice invoice = db.getInvoiceById(Integer.parseInt(invoiceId.toString()));
 
             Utils.createInvoicePdf(invoice);
-            
+
             JOptionPane.showMessageDialog(this, "Exported pdf file of the invoice successfully.", "Export pdf", JOptionPane.INFORMATION_MESSAGE);
-            
+
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Error executing SQL query:\n" + ex.getMessage(), "database error", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
@@ -914,22 +903,18 @@ public class MainFrameInvoice extends javax.swing.JFrame {
         String email = "";
         String fileName = "";
         String filePath = new File("").getAbsolutePath() + "\\export_invoices\\csv\\";
-        final String user = "zdfmontreal13@gmail.com";//change accordingly  
-        final String password = "zoe20178";//change accordingly  
-
+        final String user = "zdfmontreal13@gmail.com";
+        final String password = "zoe20178";
         try {
             Object invoiceId = modelInvoices.getValueAt(jtInvoices.getSelectedRow(), 0);
             Invoice invoice = db.getInvoiceById(Integer.parseInt(invoiceId.toString()));
             email = invoice.getCustomer().getEmail();
-            fileName = "invoice_" +invoice.getCustomer().getName()+"_"+ invoiceId.toString() + ".csv";
-
-            // File file = new File("C:\\Users\\ITC\\Documents\\project_sales_order_invoicing\\docs" +fileName+ ".csv");
+            fileName = "invoice_" + invoice.getCustomer().getName() + "_" + invoiceId.toString() + ".csv";
         } catch (SQLException ex) {
             Logger.getLogger(MainFrameInvoice.class.getName()).log(Level.SEVERE, null, ex);
         }
         System.out.println(email);
-        MailWithAttachment.send(user, password, email, "invoice", "please check invoice",filePath + fileName, fileName);
-
+        MailWithAttachment.send(user, password, email, "invoice", "please check invoice", filePath + fileName, fileName);
     }//GEN-LAST:event_miExCSVEmailActionPerformed
 
     /**
