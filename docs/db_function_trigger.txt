@@ -1,0 +1,136 @@
+to calculate the line item total in orderItems talbe
+1. create a UDF to get the unit product price from products table
+	GO  
+CREATE FUNCTION dbo.GetUnitPrice(@productID int)  
+RETURNS decimal
+AS   
+-- Returns the unit price for the product.  
+BEGIN  
+    DECLARE @unitP decimal;  
+    SELECT @unitP = p.unitPrice
+    FROM products p
+    WHERE p.id = @productID   
+        
+    RETURN @unitP;  
+END; 
+
+2. create a trigger in orderItems table when insert/update is performed, the line total will be inserted also
+
+CREATE TRIGGER [TRG_lineTotal] ON [dbo].[orderItems] 
+FOR INSERT, UPDATE
+AS
+BEGIN
+DECLARE @orderId int, @pId int, @q decimal, @uPrice decimal
+
+ Select @orderId = id from INSERTED
+ SELECT @pId = productId FROM INSERTED
+ Select @q=quantity From inserted
+ select @uPrice = dbo.GetUnitPrice(@pId)
+
+ 
+ UPDATE [dbo].[orderItems] SET lineTotal = @q * @uPrice
+          
+    WHERE @orderId = id
+END
+
+
+
+to calculate the amountBeforeTax in orders table and also updates 3 columns amountBeforeTax, amountTax, totalAmount
+
+1. create a function to sum all the lines with same orderId
+CREATE or alter FUNCTION dbo.GetTotalPerOrder(@orderId int)  
+RETURNS decimal
+AS   
+-- Returns the sum of line total of an order
+BEGIN  
+    DECLARE @total decimal;  
+    SELECT @total = sum(lineTotal)
+    FROM orderItems o
+    group by o.orderId 
+	having o.orderId = orderId
+    RETURN @total;  
+
+END; 
+
+2. create a function to get the customer TaxCode with the current orderId as inserting
+
+CREATE or Alter FUNCTION dbo.GetCustomerTaxCode(@oId int)  
+RETURNS Varchar(20)
+AS   
+-- Returns customer's taxCode
+BEGIN  
+    DECLARE @taxCode varchar(20)
+
+    SELECT @taxCode = taxCode from orderItems
+	inner join orders on orders.id = @oId
+	inner join customers on orders.customerId = customers.id
+	        
+    RETURN @taxCode
+END; 
+
+
+3. create a trigger in orderItems to update the orders table (3 columns amountBeforeTax, amountTax, totalAmount) whenever a line is added
+
+CREATE or Alter TRIGGER [TRG_totalByOrder] ON [dbo].[orderItems] 
+FOR INSERT, UPDATE
+AS
+BEGIN
+--@oId is the orderId with lineitem that is being inserted into orderitems table
+DECLARE @oId int, @total decimal, @taxCode varchar(20)
+
+ Select @oId = orderId from INSERTED
+ select @taxCode =dbo.GetCustomerTaxCode(@oId) 
+ select @total = dbo.GetTotalPerOrder(@oId)  
+ 
+ if  @taxCode ='gst' 
+ UPDATE [dbo].[orders] SET amountBeforeTax = @total, amountTax = @total*0.05, totalAmount =@total *1.05
+          WHERE @oId = id 
+		  
+if @taxCode ='qst'
+UPDATE [dbo].[orders] SET amountBeforeTax = @total, amountTax = @total*0.09975, totalAmount =@total *1.09975
+          WHERE @oId = id 
+		  
+if @taxCode ='gstqst'
+UPDATE [dbo].[orders] SET amountBeforeTax = @total, amountTax = @total*0.14975, totalAmount =@total *1.14975
+          WHERE @oId = id
+		  
+		   
+if @taxCode ='nosalestax'
+UPDATE [dbo].[orders] SET amountBeforeTax = @total, amountTax = 0, totalAmount =@total
+          WHERE @oId = id 
+
+END
+
+
+how codes looks like to execute the functions
+declare @total decimal
+EXEC @total = dbo.GetTotalPerOrder 
+  @orderId = 5; 
+select @total;
+
+declare @t varchar(20)
+exec @t = dbo.GetCustomerTaxCode
+@oId=1
+select @t;
+
+
+insert into products values('watch', 50.9);
+insert into products values('cellphone', 120.8);
+insert into products values('walkmeter', 69.99);
+insert into products values('DVD', 12.9);
+
+insert into customers values('pop', '567 Main Street', 'gst',2000);
+insert into customers values('pup', '568 Main Street', 'gst',4000);
+insert into customers values('Mim', '569 Main Street', 'gst',5000);
+insert into customers values('kop', '570 Main Street', 'gst',3000);
+insert into customers values('Mop', '572 Main Street', 'qst',3000);
+
+insert into orders (customerId)values(3);
+insert into orders (customerId)values(4);
+insert into orders (customerId)values(2);
+
+insert into orderItems (orderId, productId, quantity)values(9,1,1);
+insert into orderItems (orderId, productId, quantity)values(9,2,3);
+insert into orderItems (orderId, productId, quantity)values(7,3,2);
+insert into orderItems (orderId, productId, quantity)values(7,4,3);
+
