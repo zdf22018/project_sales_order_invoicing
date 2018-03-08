@@ -176,8 +176,9 @@ public class Database {
                     updateStmt.setInt(1, invoiceId);
                     updateStmt.setString(2, order.getStatus().name());
                     updateStmt.setInt(3, order.getId());
-
+                    System.out.println("update order status to:"+order.getStatus().name() );
                     updateStmt.executeUpdate();
+                    
                 }
             }
             
